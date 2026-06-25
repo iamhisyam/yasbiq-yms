@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: yms-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: yms_user
+      POSTGRES_PASSWORD: yms_password
+      POSTGRES_DB: yms_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U yms_user -d yms_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:

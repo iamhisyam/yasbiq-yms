@@ -1,0 +1,251 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1780838324045,
+      "tag": "0000_flawless_black_widow",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1780885523898,
+      "tag": "0001_wise_nehzno",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1780888014355,
+      "tag": "0002_shocking_power_pack",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1780888398475,
+      "tag": "0003_empty_veda",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1780890308218,
+      "tag": "0004_greedy_black_cat",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1780890609711,
+      "tag": "0005_square_malcolm_colcord",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1780890959862,
+      "tag": "0006_serious_sharon_carter",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1780897619873,
+      "tag": "0007_yielding_sebastian_shaw",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1780903125678,
+      "tag": "0008_yielding_mimic",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1780903419604,
+      "tag": "0009_tiny_human_torch",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1781775709463,
+      "tag": "0010_manual_tagihan_v2",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1781775709464,
+      "tag": "0011_tired_harpoon",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1781775709465,
+      "tag": "0012_manual_tagihan_v3",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1781775709466,
+      "tag": "0013_manual_tagihan_beasiswa",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1781775709467,
+      "tag": "0014_phase1_fundamentals",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1781775709468,
+      "tag": "0015_unify_tagihan",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1781775709469,
+      "tag": "0016_tingkat_master",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1781775709470,
+      "tag": "0017_pengaturan",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1781775709471,
+      "tag": "0018_kategori_coretax",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1781775709472,
+      "tag": "0019_aset_tetap",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1781775709473,
+      "tag": "0020_dana",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1781775709474,
+      "tag": "0021_bos",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1781775709475,
+      "tag": "0022_schema_fixes",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1781775709476,
+      "tag": "0023_tax_fields",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1781775709477,
+      "tag": "0024_kategori_unique",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1781775709478,
+      "tag": "0025_bank_jenis",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1781775709479,
+      "tag": "0026_role_guru",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1781775709480,
+      "tag": "0027_vendor_kategori_no_unit",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1781775709481,
+      "tag": "0028_penggajian_enhancement",
+      "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1781775709482,
+      "tag": "0029_penggajian_komponen_unique",
+      "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1781775709483,
+      "tag": "0030_coa",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1781775709484,
+      "tag": "0031_jurnal",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1781775709485,
+      "tag": "0032_kas_kategori_coa_kode",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1781775709486,
+      "tag": "0033_yayasan_unit_columns_drop_pengaturan",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1781775709487,
+      "tag": "0034_coa_global",
+      "breakpoints": true
+    }
+  ]
+}

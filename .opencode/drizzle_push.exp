@@ -1,0 +1,9 @@
+#!/usr/bin/expect -f
+set timeout 60
+spawn npx drizzle-kit push
+expect "No, abort"
+send "\033\[B\r"
+expect {
+    "executed" { puts "done" }
+    timeout { puts "timeout" }
+}
