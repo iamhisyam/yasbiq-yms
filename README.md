@@ -71,8 +71,40 @@ Seed menghasilkan data 12 bulan penggajian, SPP, transaksi kas, aset tetap, dan 
 
 ```bash
 pnpm build
-node dist/server/index.mjs
+pnpm start
 ```
+
+## Deploy ke Render
+
+### 1. Setup di Render Dashboard
+
+Buat **Web Service** baru, hubungkan ke repo GitHub. Set:
+
+| Setting | Value |
+|---|---|
+| **Build Command** | `pnpm install && pnpm build` |
+| **Start Command** | `pnpm start` |
+| **Release Command** | `pnpm db:migrate` |
+
+**Release Command** jalan duluan sebelum deploy. Migration di sini, bukan di Start Command.
+
+### 2. Environment Variables
+
+Set di Render → Environment Variables:
+
+| Variable | Value |
+|---|---|
+| `DATABASE_URL` | `postgresql://user:password@host:5432/dbname` |
+| `BETTER_AUTH_URL` | `https://app-name.onrender.com` |
+| `BETTER_AUTH_SECRET` | (generate: `openssl rand -base64 32`) |
+
+### 3. Database
+
+Render tidak menyediakan PostgreSQL built-in. Gunakan:
+- [Render PostgreSQL](https://render.com/docs/databases) (add-on)
+- [Neon](https://neon.tech), [Supabase](https://supabase.com), atau provider eksternal
+
+Pastikan database bisa diakses dari server Render (allowlist IP / non-restricted).
 
 ## Stack
 
