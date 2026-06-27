@@ -16,7 +16,7 @@ export const statusPenggajianEnum = pgEnum('status_penggajian', [
 ])
 
 export const tipeKomponenEnum = pgEnum('tipe_komponen', [
-  'penerimaan', 'potongan',
+  'penerimaan', 'potongan', 'biaya',
 ])
 
 export const jenisKelaminEnum = pgEnum('jenis_kelamin', ['L', 'P'])

@@ -1,6 +1,6 @@
 import { createServerFn } from '@tanstack/react-start'
 import { z } from 'zod'
-import { eq, and, sql, ilike, inArray, isNull, or } from 'drizzle-orm'
+import { eq, and, sql, ilike, inArray, notInArray, isNull, or } from 'drizzle-orm'
 import { db } from '#/db/index.server'
 import { pegawai, mataPelajaran, pegawaiMapel, penggajian, penggajianKomponen, penggajianDetail, kasTransaksi, userUnit, jurnalHeader, jurnalDetail, bankAccount } from '#/db/schema/index'
 import { auth } from '#/lib/auth'
@@ -295,7 +295,7 @@ export const prosesPenggajian = createServerFn({ method: 'POST' })
 
     const pegawaiList = await db.query.pegawai.findMany({
       where: and(
-        eq(pegawai.unitId, data.unitId),
+        or(eq(pegawai.unitId, data.unitId), isNull(pegawai.unitId)),
         eq(pegawai.aktif, true),
       ),
     })
@@ -312,10 +312,10 @@ export const prosesPenggajian = createServerFn({ method: 'POST' })
       const detailItems = komponenList.map((k) => {
         let jumlah = k.defaultJumlah
 
-        if (k.hitungOtomatis) {
-          if (k.kode === 'gaji_pokok') {
-            jumlah = gapok
-          } else if (k.kode === 'bpjs_kesehatan') {
+        if (k.kode === 'gaji_pokok') {
+          jumlah = gapok
+        } else if (k.hitungOtomatis) {
+          if (k.kode === 'bpjs_kesehatan') {
             jumlah = bpjsKes.karyawan
           } else if (k.kode === 'bpjs_jht') {
             jumlah = bpjsTK.jhtKaryawan
@@ -407,7 +407,7 @@ export const createKomponen = createServerFn({ method: 'POST' })
   .validator(z.object({
     unitId: z.string().uuid(),
     nama: z.string().min(2),
-    tipe: z.enum(['penerimaan', 'potongan']),
+    tipe: z.enum(['penerimaan', 'potongan', 'biaya']),
     kode: z.string().min(1),
     defaultJumlah: z.number().int().optional().default(0),
     objekPajak: z.boolean().optional().default(true),
@@ -426,8 +426,11 @@ export const updateKomponen = createServerFn({ method: 'POST' })
   .validator(z.object({
     id: z.string().uuid(),
     nama: z.string().min(2).optional(),
+    tipe: z.enum(['penerimaan', 'potongan', 'biaya']).optional(),
+    kode: z.string().min(1).optional(),
     defaultJumlah: z.number().int().optional(),
     objekPajak: z.boolean().optional(),
+    hitungOtomatis: z.boolean().optional(),
     aktif: z.boolean().optional(),
     urutan: z.number().int().optional(),
   }))
@@ -467,7 +470,7 @@ export const updatePenggajian = createServerFn({ method: 'POST' })
       id: z.string().uuid().optional(),
       kode: z.string().min(1),
       nama: z.string().min(1),
-      tipe: z.enum(['penerimaan', 'potongan']),
+      tipe: z.enum(['penerimaan', 'potongan', 'biaya']),
       jumlah: z.number().int(),
       objekPajak: z.boolean().optional().default(true),
     })).optional(),
@@ -721,6 +724,141 @@ export const deletePenggajian = createServerFn({ method: 'POST' })
     return { deleted: true }
   })
 
+export const getPenggajianDetail = createServerFn({ method: 'GET' })
+  .validator(z.object({ id: z.string().uuid() }))
+  .handler(async ({ data }) => {
+    const session = await getSessionOrThrow()
+    const row = await db.query.penggajian.findFirst({
+      where: eq(penggajian.id, data.id),
+      with: {
+        pegawai: { with: { unit: true } },
+        unit: true,
+        details: { orderBy: (d, { asc }) => [asc(d.urutan)] },
+      },
+    })
+    if (!row) throw new Error('Data tidak ditemukan')
+    const { requireUnitAccess } = await import('#/lib/unit-guard.server')
+    await requireUnitAccess(session.user.id, row.unitId, (session.user as any).isSuperAdmin)
+    return row
+  })
+
+export const reprosesPenggajian = createServerFn({ method: 'POST' })
+  .validator(z.object({ id: z.string().uuid() }))
+  .handler(async ({ data }) => {
+    const session = await getSessionOrThrow()
+    const existing = await db.query.penggajian.findFirst({
+      where: eq(penggajian.id, data.id),
+      with: { pegawai: true },
+    })
+    if (!existing) throw new Error('Data tidak ditemukan')
+    const { requireMinimumRole } = await import('#/lib/unit-guard.server')
+    await requireMinimumRole(session.user.id, existing.unitId, 'admin_yayasan', (session.user as any).isSuperAdmin)
+
+    const komponenList = await db.query.penggajianKomponen.findMany({
+      where: and(eq(penggajianKomponen.unitId, existing.unitId), eq(penggajianKomponen.aktif, true)),
+      orderBy: (k, { asc }) => [asc(k.urutan)],
+    })
+
+    const p = existing.pegawai!
+    const gapok = p.gajiPokok || 0
+    const bpjsKes = hitungBpjsKesehatan(gapok)
+    const bpjsTK = hitungBpjsTK(gapok)
+    const pph21 = hitungPph21(gapok, p.statusPajak || 'TK/0')
+
+    const detailItems = komponenList.map((k) => {
+      let jumlah = k.defaultJumlah || 0
+      if (k.kode === 'gaji_pokok') {
+        jumlah = gapok
+      } else if (k.hitungOtomatis) {
+        if (k.kode === 'bpjs_kesehatan') jumlah = bpjsKes.karyawan
+        else if (k.kode === 'bpjs_jht') jumlah = bpjsTK.jhtKaryawan
+        else if (k.kode === 'bpjs_jp') jumlah = bpjsTK.jpKaryawan
+        else if (k.kode === 'pph21') jumlah = pph21
+      }
+      return {
+        penggajianId: data.id, tipe: k.tipe as 'penerimaan' | 'potongan',
+        kode: k.kode, nama: k.nama, jumlah, objekPajak: k.objekPajak, urutan: k.urutan,
+      }
+    })
+
+    const totalPenerimaan = detailItems.filter((d) => d.tipe === 'penerimaan').reduce((s, d) => s + d.jumlah, 0)
+    const totalPotongan = detailItems.filter((d) => d.tipe === 'potongan').reduce((s, d) => s + d.jumlah, 0)
+
+    await db.transaction(async (tx) => {
+      await tx.delete(penggajianDetail).where(eq(penggajianDetail.penggajianId, data.id))
+      await tx.insert(penggajianDetail).values(detailItems)
+      await tx.update(penggajian).set({
+        gajiPokok: gapok, totalPenerimaan, totalPotongan, pph21,
+        bpjsKaryawan: bpjsKes.karyawan + bpjsTK.jhtKaryawan + bpjsTK.jpKaryawan,
+        bpjsPerusahaan: bpjsKes.perusahaan + bpjsTK.jhtPerusahaan + bpjsTK.jpPerusahaan + bpjsTK.jkk + bpjsTK.jkm,
+        totalDiterima: totalPenerimaan - totalPotongan,
+        updatedAt: new Date(),
+      }).where(eq(penggajian.id, data.id))
+    })
+
+    return { success: true }
+  })
+
+export const updatePenggajianAdjustments = createServerFn({ method: 'POST' })
+  .validator(z.object({
+    id: z.string().uuid(),
+    adjustments: z.array(z.object({
+      tipe: z.enum(['penerimaan', 'potongan']),
+      nama: z.string().min(1),
+      jumlah: z.number().int().min(0),
+    })),
+  }))
+  .handler(async ({ data }) => {
+    const session = await getSessionOrThrow()
+    const existing = await db.query.penggajian.findFirst({
+      where: eq(penggajian.id, data.id),
+      with: { details: { orderBy: (d, { asc }) => [asc(d.urutan)] } },
+    })
+    if (!existing) throw new Error('Data tidak ditemukan')
+    if (existing.status !== 'draft') throw new Error('Hanya data draft yang dapat disesuaikan')
+    const { requireMinimumRole } = await import('#/lib/unit-guard.server')
+    await requireMinimumRole(session.user.id, existing.unitId, 'admin_yayasan', (session.user as any).isSuperAdmin)
+
+    const AUTO_KODES = ['gaji_pokok', 'bpjs_kesehatan', 'bpjs_jht', 'bpjs_jp', 'pph21', 'thr']
+
+    await db.transaction(async (tx) => {
+      // Remove old adjustments
+      await tx.delete(penggajianDetail).where(
+        and(eq(penggajianDetail.penggajianId, data.id), notInArray(penggajianDetail.kode, AUTO_KODES)),
+      )
+
+      // Insert new adjustments
+      const adjItems = data.adjustments.map((a, i) => ({
+        penggajianId: data.id,
+        tipe: a.tipe,
+        kode: 'adj',
+        nama: a.nama,
+        jumlah: a.jumlah,
+        objekPajak: a.tipe === 'penerimaan',
+        urutan: 100 + i,
+      }))
+      if (adjItems.length > 0) {
+        await tx.insert(penggajianDetail).values(adjItems)
+      }
+
+      // Recalculate from fresh state
+      const allItems = await tx.query.penggajianDetail.findMany({
+        where: eq(penggajianDetail.penggajianId, data.id),
+      })
+      const totalPenerimaan = allItems.filter((i) => i.tipe === 'penerimaan').reduce((s, i) => s + i.jumlah, 0)
+      const totalPotongan = allItems.filter((i) => i.tipe === 'potongan').reduce((s, i) => s + i.jumlah, 0)
+
+      await tx.update(penggajian).set({
+        totalPenerimaan,
+        totalPotongan,
+        totalDiterima: totalPenerimaan - totalPotongan,
+        updatedAt: new Date(),
+      }).where(eq(penggajian.id, data.id))
+    })
+
+    return { success: true }
+  })
+
 export const seedPenggajianKomponen = createServerFn({ method: 'POST' })
   .validator(z.object({ unitId: z.string().uuid() }))
   .handler(async ({ data }) => {
@@ -729,11 +867,11 @@ export const seedPenggajianKomponen = createServerFn({ method: 'POST' })
     await requireMinimumRole(session.user.id, data.unitId, 'admin_yayasan', (session.user as any).isSuperAdmin)
 
     const defaults = [
-      { unitId: data.unitId, nama: 'Gaji Pokok', tipe: 'penerimaan' as const, kode: 'gaji_pokok', objekPajak: true, hitungOtomatis: false, urutan: 1 },
-      { unitId: data.unitId, nama: 'BPJS Kesehatan', tipe: 'potongan' as const, kode: 'bpjs_kesehatan', objekPajak: false, hitungOtomatis: true, urutan: 2 },
-      { unitId: data.unitId, nama: 'BPJS JHT', tipe: 'potongan' as const, kode: 'bpjs_jht', objekPajak: false, hitungOtomatis: true, urutan: 3 },
-      { unitId: data.unitId, nama: 'BPJS JP', tipe: 'potongan' as const, kode: 'bpjs_jp', objekPajak: false, hitungOtomatis: true, urutan: 4 },
-      { unitId: data.unitId, nama: 'PPh 21', tipe: 'potongan' as const, kode: 'pph21', objekPajak: false, hitungOtomatis: true, urutan: 5 },
+      { unitId: data.unitId, nama: 'Gaji Pokok', tipe: 'penerimaan' as const, kode: 'gaji_pokok', objekPajak: true, hitungOtomatis: true, urutan: 1 },
+      { unitId: data.unitId, nama: 'BPJS Kesehatan', tipe: 'biaya' as const, kode: 'bpjs_kesehatan', objekPajak: false, hitungOtomatis: true, urutan: 2 },
+      { unitId: data.unitId, nama: 'BPJS JHT', tipe: 'biaya' as const, kode: 'bpjs_jht', objekPajak: false, hitungOtomatis: true, urutan: 3 },
+      { unitId: data.unitId, nama: 'BPJS JP', tipe: 'biaya' as const, kode: 'bpjs_jp', objekPajak: false, hitungOtomatis: true, urutan: 4 },
+      { unitId: data.unitId, nama: 'PPh 21', tipe: 'biaya' as const, kode: 'pph21', objekPajak: false, hitungOtomatis: true, urutan: 5 },
     ]
 
     await db.insert(penggajianKomponen).values(defaults).onConflictDoNothing({ target: [penggajianKomponen.kode, penggajianKomponen.unitId] })
@@ -754,7 +892,7 @@ export const prosesThr = createServerFn({ method: 'POST' })
 
     const pegawaiList = await db.query.pegawai.findMany({
       where: and(
-        eq(pegawai.unitId, data.unitId),
+        or(eq(pegawai.unitId, data.unitId), isNull(pegawai.unitId)),
         eq(pegawai.aktif, true),
       ),
     })
@@ -786,11 +924,11 @@ export const prosesThr = createServerFn({ method: 'POST' })
           periode: data.periode,
           gajiPokok: gapok,
           totalPenerimaan: thr,
-          totalPotongan: pph21,
+          totalPotongan: 0,
           pph21,
           bpjsKaryawan: 0,
           bpjsPerusahaan: 0,
-          totalDiterima: thr - pph21,
+          totalDiterima: thr,
           status: 'draft',
         }).returning()
 
@@ -806,7 +944,7 @@ export const prosesThr = createServerFn({ method: 'POST' })
           },
           {
             penggajianId: payroll.id,
-            tipe: 'potongan',
+            tipe: 'biaya',
             kode: 'pph21',
             nama: 'PPh 21',
             jumlah: pph21,

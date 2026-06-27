@@ -2,14 +2,16 @@ import { createFileRoute, redirect } from '@tanstack/react-router'
 import { getCurrentSession, requireRole } from '#/server/auth'
 import { useUnit } from '#/lib/unit-context'
 import {
-  getHutangPiutangList, createHutangPiutang, updateHutangPiutang, getRingkasanHutangPiutang,
+  getHutangPiutangList, createHutangPiutang, updateHutangPiutang,
+  deleteHutangPiutang, getRingkasanHutangPiutang,
   getVendorList,
 } from '#/server/keuangan'
 import { getPegawaiList } from '#/server/pegawai'
 import { useState, useEffect } from 'react'
-import { TrendingUp, Plus, BookOpen, Pencil, X, AlertCircle, FileText } from 'lucide-react'
+import { TrendingUp, Plus, BookOpen, Pencil, X, AlertCircle, FileText, Trash2 } from 'lucide-react'
 
 import { Combobox } from '#/components/ui/combobox'
+import { ConfirmDialog } from '#/components/confirm-dialog'
 
 export const Route = createFileRoute('/_dashboard/hutang-piutang')({
   beforeLoad: async () => {
@@ -38,6 +40,7 @@ function HutangPage() {
   const [editItem, setEditItem] = useState<any>(null)
   const [formUnitId, setFormUnitId] = useState('')
   const [formError, setFormError] = useState('')
+  const [confirmDelete, setConfirmDelete] = useState<{ message: string; onConfirm: () => void } | null>(null)
   const [formData, setFormData] = useState({
     tipe: 'hutang' as 'hutang' | 'piutang',
     jumlah: 0,
@@ -95,11 +98,14 @@ function HutangPage() {
 
   return (
     <div className="space-y-6">
-      <div className="nb-page-header">
+      <div className="nb-page-header flex items-start sm:items-center justify-between gap-3">
         <div>
           <h2 className="nb-page-title">Hutang & Piutang</h2>
           <p className="text-sm text-muted-foreground mt-1">Catat dan pantau hutang usaha & piutang yayasan.</p>
         </div>
+        <button onClick={() => openModal(null)} className="nb-btn nb-btn-primary text-sm cursor-pointer shrink-0">
+          <Plus className="w-4 h-4" /> Tambah Baru
+        </button>
       </div>
 
       {/* Ringkasan */}
@@ -153,9 +159,6 @@ function HutangPage() {
             emptyMessage="Tidak ada data"
           />
         </div>
-        <button onClick={() => openModal(null)} className="nb-btn nb-btn-primary text-sm cursor-pointer w-full sm:w-auto justify-center">
-          <Plus className="w-4 h-4" /> Tambah Baru
-        </button>
       </div>
 
       {/* Table */}
@@ -190,6 +193,11 @@ function HutangPage() {
                   <td className="text-sm text-muted-foreground">{item.jatuhTempo ? new Date(item.jatuhTempo).toLocaleDateString('id-ID') : '-'}</td>
                   <td>
                     <button onClick={() => openModal(item)} className="p-1.5 bg-card border-2 border-nb-ink rounded hover:bg-muted-foreground/10 cursor-pointer"><Pencil className="w-3.5 h-3.5" /></button>
+                    <button onClick={() => setConfirmDelete({ message: `Hapus ${item.tipe === 'hutang' ? 'hutang' : 'piutang'}: ${item.deskripsi}?`, onConfirm: async () => {
+                      await deleteHutangPiutang({ data: { id: item.id } })
+                      setConfirmDelete(null)
+                      fetchData()
+                    } })} className="p-1.5 bg-card border-2 border-nb-ink rounded hover:bg-rose-100 cursor-pointer"><Trash2 className="w-3.5 h-3.5 text-rose-700" /></button>
                   </td>
                 </tr>
               ))}
@@ -328,6 +336,17 @@ function HutangPage() {
             </form>
           </div>
         </div>
+      )}
+
+      {confirmDelete && (
+        <ConfirmDialog
+          open
+          onClose={() => setConfirmDelete(null)}
+          onConfirm={confirmDelete.onConfirm}
+          title="Konfirmasi Hapus"
+          message={confirmDelete.message}
+          confirmText="Hapus"
+        />
       )}
 
     </div>

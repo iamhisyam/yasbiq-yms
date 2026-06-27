@@ -771,6 +771,26 @@ export const updateHutangPiutang = createServerFn({ method: 'POST' })
     return updated
   })
 
+export const deleteHutangPiutang = createServerFn({ method: 'POST' })
+  .validator(z.object({ id: z.string().uuid() }))
+  .handler(async ({ data }) => {
+    const session = await getSessionOrThrow()
+    const existing = await db.query.hutangPiutang.findFirst({ where: eq(hutangPiutang.id, data.id) })
+    if (!existing) throw new Error('Data tidak ditemukan')
+    const { requireMinimumRole } = await import('#/lib/unit-guard.server')
+    await requireMinimumRole(session.user.id, existing.unitId, 'admin_yayasan', (session.user as any).isSuperAdmin)
+
+    const [txCountResult] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(kasTransaksi)
+      .where(eq(kasTransaksi.hutangPiutangId, data.id))
+    const txCount = txCountResult?.count ?? 0
+    if (txCount > 0) throw new Error(`Tidak bisa dihapus: ${txCount} transaksi masih merujuk ke hutang/piutang ini. Hapus transaksi terlebih dahulu.`)
+
+    await db.delete(hutangPiutang).where(eq(hutangPiutang.id, data.id))
+    return { success: true }
+  })
+
 export const getRingkasanHutangPiutang = createServerFn({ method: 'GET' })
   .validator(z.object({ unitId: z.string() }))
   .handler(async ({ data }) => {

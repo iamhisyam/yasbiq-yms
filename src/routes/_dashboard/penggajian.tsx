@@ -35,14 +35,14 @@ type DetailItem = {
   id?: string
   kode: string
   nama: string
-  tipe: 'penerimaan' | 'potongan'
+  tipe: 'penerimaan' | 'potongan' | 'biaya'
   jumlah: number
   objekPajak: boolean
 }
 
 type KomponenForm = {
   nama: string
-  tipe: 'penerimaan' | 'potongan'
+  tipe: 'penerimaan' | 'potongan' | 'biaya'
   kode: string
   defaultJumlah: number
   objekPajak: boolean
@@ -333,7 +333,7 @@ function PenggajianPage() {
       id: d.id,
       kode: d.kode || '',
       nama: d.nama || '',
-      tipe: d.tipe as 'penerimaan' | 'potongan',
+      tipe: d.tipe as 'penerimaan' | 'potongan' | 'biaya',
       jumlah: d.jumlah || 0,
       objekPajak: d.objekPajak ?? (d.tipe === 'penerimaan'),
     }))
@@ -464,7 +464,7 @@ function PenggajianPage() {
   // ── Slip PDF props builder ──
   const buildSlipProps = (item: any) => {
     const details = (item.details || []).map((d: any) => ({
-      tipe: d.tipe as 'penerimaan' | 'potongan',
+      tipe: d.tipe as 'penerimaan' | 'potongan' | 'biaya',
       nama: d.nama,
       jumlah: d.jumlah || 0,
     }))
@@ -524,6 +524,9 @@ function PenggajianPage() {
     if (forPersetujuan || g.status === 'draft') {
       return (
         <div className="flex gap-1">
+          <Link to="/penggajian_detail/$id" params={{ id: g.id }}
+            className="text-sm bg-slate-100 hover:bg-slate-200 border-2 border-nb-ink rounded px-1.5 py-0.5 font-bold cursor-pointer inline-flex items-center"
+            title="Detail"><Eye className="w-3 h-3" /></Link>
           {!forPersetujuan && (
             <button onClick={() => openEdit(g)}
               className="text-sm bg-sky-100 hover:bg-sky-200 border-2 border-nb-ink rounded px-1.5 py-0.5 font-bold cursor-pointer"
@@ -543,9 +546,9 @@ function PenggajianPage() {
     if (g.status === 'disetujui') {
       return (
         <div className="flex gap-1">
-          <button onClick={() => setViewItem(g)}
-            className="text-sm bg-slate-100 hover:bg-slate-200 border-2 border-nb-ink rounded px-1.5 py-0.5 font-bold cursor-pointer"
-            title="Lihat Detail"><Eye className="w-3 h-3" /></button>
+          <Link to="/penggajian_detail/$id" params={{ id: g.id }}
+            className="text-sm bg-slate-100 hover:bg-slate-200 border-2 border-nb-ink rounded px-1.5 py-0.5 font-bold cursor-pointer inline-flex items-center"
+            title="Detail"><Eye className="w-3 h-3" /></Link>
           {canApprove && (
             <button onClick={() => handleReject(g.id)}
               className="text-sm bg-amber-100 hover:bg-amber-200 border-2 border-nb-ink rounded px-1.5 py-0.5 font-bold cursor-pointer"
@@ -563,9 +566,9 @@ function PenggajianPage() {
     // dibayar
     return (
       <div className="flex gap-1">
-        <button onClick={() => setViewItem(g)}
-          className="text-sm bg-slate-100 hover:bg-slate-200 border-2 border-nb-ink rounded px-1.5 py-0.5 font-bold cursor-pointer"
-          title="Lihat Detail"><Eye className="w-3 h-3" /></button>
+        <Link to="/penggajian_detail/$id" params={{ id: g.id }}
+          className="text-sm bg-slate-100 hover:bg-slate-200 border-2 border-nb-ink rounded px-1.5 py-0.5 font-bold cursor-pointer inline-flex items-center"
+          title="Detail"><Eye className="w-3 h-3" /></Link>
         <button onClick={() => setSlipItem(g)}
           className="text-sm bg-purple-100 hover:bg-purple-200 border-2 border-nb-ink rounded px-1.5 py-0.5 font-bold cursor-pointer"
           title="Slip Gaji"><FileText className="w-3 h-3" /></button>
@@ -846,8 +849,8 @@ function PenggajianPage() {
                       </td>
                       <td>
                         <span className={`inline-flex text-sm font-heading font-semibold px-2 py-0.5 rounded-full border ${
-                          k.tipe === 'penerimaan' ? 'bg-emerald-100 border-emerald-700 text-emerald-800' : 'bg-rose-100 border-rose-700 text-rose-800'
-                        }`}>{k.tipe === 'penerimaan' ? 'Penerimaan' : 'Potongan'}</span>
+                          k.tipe === 'penerimaan' ? 'bg-emerald-100 border-emerald-700 text-emerald-800' : k.tipe === 'potongan' ? 'bg-rose-100 border-rose-700 text-rose-800' : 'bg-purple-100 border-purple-700 text-purple-800'
+                        }`}>{k.tipe === 'penerimaan' ? 'Penerimaan' : k.tipe === 'potongan' ? 'Potongan' : 'Biaya'}</span>
                       </td>
                       <td className="font-heading font-semibold text-sm">{formatRupiah(k.defaultJumlah)}</td>
                       <td className="text-sm">{k.objekPajak ? 'Ya' : 'Tidak'}</td>
@@ -996,11 +999,12 @@ function PenggajianPage() {
                     <div key={idx} className="grid grid-cols-12 gap-2 items-center p-2 bg-muted/20 border-2 border-nb-ink rounded">
                       <select
                         value={d.tipe}
-                        onChange={(e) => updateDetailItem(idx, { tipe: e.target.value as 'penerimaan' | 'potongan', objekPajak: e.target.value === 'penerimaan' })}
+                        onChange={(e) => updateDetailItem(idx, { tipe: e.target.value as 'penerimaan' | 'potongan' | 'biaya', objekPajak: e.target.value === 'penerimaan' })}
                         className="col-span-3 nb-input text-sm !py-1"
                       >
                         <option value="penerimaan">Penerimaan</option>
                         <option value="potongan">Potongan</option>
+                        <option value="biaya">Biaya Perusahaan</option>
                       </select>
                       <input
                         value={d.nama}
@@ -1104,6 +1108,26 @@ function PenggajianPage() {
                   </div>
                 </div>
               </div>
+
+              {(viewItem.details || []).filter((d: any) => d.tipe === 'biaya').length > 0 && (
+                <div>
+                  <h4 className="font-heading font-bold text-sm uppercase tracking-wider mb-2 text-purple-700">Biaya Perusahaan</h4>
+                  <div className="space-y-1">
+                    {(viewItem.details || []).filter((d: any) => d.tipe === 'biaya').map((d: any, i: number) => (
+                      <div key={i} className="flex justify-between text-sm py-1.5 px-2 border-b border-nb-ink/20">
+                        <span>{d.nama}</span>
+                        <span className="font-heading font-semibold">{formatRupiah(d.jumlah)}</span>
+                      </div>
+                    ))}
+                    <div className="flex justify-between text-sm font-heading font-bold py-1.5 px-2 bg-purple-50 border-2 border-nb-ink rounded">
+                      <span>Total Biaya Perusahaan</span>
+                      <span>{formatRupiah(
+                        (viewItem.details || []).filter((d: any) => d.tipe === 'biaya').reduce((s: number, d: any) => s + (d.jumlah || 0), 0)
+                      )}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div className="p-3 bg-nb-ink/10 border-2 border-nb-ink rounded flex justify-between text-sm font-heading font-bold">
                 <span>Total Diterima</span>
@@ -1235,10 +1259,11 @@ function PenggajianPage() {
               </div>
               <div>
                 <label className="block text-sm font-heading font-bold mb-1 uppercase tracking-wider">Tipe</label>
-                <select value={komponenForm.tipe} onChange={(e) => setKomponenForm({ ...komponenForm, tipe: e.target.value as 'penerimaan' | 'potongan' })}
+                <select value={komponenForm.tipe} onChange={(e) => setKomponenForm({ ...komponenForm, tipe: e.target.value as 'penerimaan' | 'potongan' | 'biaya' })}
                   className="nb-input">
                   <option value="penerimaan">Penerimaan</option>
                   <option value="potongan">Potongan</option>
+                  <option value="biaya">Biaya Perusahaan</option>
                 </select>
               </div>
               <div>

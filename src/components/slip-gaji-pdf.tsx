@@ -45,7 +45,7 @@ interface SlipGajiPDFProps {
     periode: string
     unit: { nama: string }
   }
-  details: Array<{ tipe: 'penerimaan' | 'potongan'; nama: string; jumlah: number }>
+  details: Array<{ tipe: 'penerimaan' | 'potongan' | 'biaya'; nama: string; jumlah: number }>
   totalPenerimaan: number
   totalPotongan: number
   totalDiterima: number
@@ -68,6 +68,7 @@ export function SlipGajiPDF({
 }: SlipGajiPDFProps) {
   const penerimaan = details.filter((d) => d.tipe === 'penerimaan')
   const potongan = details.filter((d) => d.tipe === 'potongan')
+  const biaya = details.filter((d) => d.tipe === 'biaya')
 
   return (
     <Document>
@@ -128,6 +129,26 @@ export function SlipGajiPDF({
           <Text style={styles.totalLabel}>Total Potongan</Text>
           <Text style={styles.totalAmount}>{fmt(totalPotongan)}</Text>
         </View>
+
+        {biaya.length > 0 && (
+          <>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Biaya Perusahaan</Text>
+              <Text style={styles.sectionLabelCol}>Jumlah</Text>
+            </View>
+            {biaya.map((item, i) => (
+              <View key={i} style={styles.detailRow}>
+                <Text style={styles.detailName}>{item.nama}</Text>
+                <Text style={styles.detailAmount}>{fmt(item.jumlah)}</Text>
+              </View>
+            ))}
+            <View style={styles.divider} />
+            <View style={styles.totalRow}>
+              <Text style={styles.totalLabel}>Total Biaya Perusahaan</Text>
+              <Text style={styles.totalAmount}>{fmt(biaya.reduce((s, d) => s + (d.jumlah || 0), 0))}</Text>
+            </View>
+          </>
+        )}
 
         <View style={styles.grandTotal}>
           <Text style={styles.grandTotalLabel}>Total Diterima</Text>

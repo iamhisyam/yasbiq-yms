@@ -9,7 +9,7 @@ import { useState, useEffect, useRef } from 'react'
 import { ConfirmDialog } from '#/components/confirm-dialog'
 import {
   Briefcase, Plus, Edit2, Trash2, X, ChevronLeft, ChevronRight,
-  AlertCircle, Search, BookOpen, Eye, UserCheck, UserX, Upload, Download,
+  AlertCircle, Search, BookOpen, Eye, UserCheck, UserX, Upload, Download, DollarSign,
 } from 'lucide-react'
 import { Combobox } from '#/components/ui/combobox'
 import { importPegawai, downloadTemplatePegawai } from '#/server/pegawai-import'

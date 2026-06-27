@@ -44,6 +44,7 @@ import { Route as DashboardTagihanIdRouteImport } from './routes/_dashboard/tagi
 import { Route as DashboardSppIdRouteImport } from './routes/_dashboard/spp_.$id'
 import { Route as DashboardSiswaIdRouteImport } from './routes/_dashboard/siswa_.$id'
 import { Route as DashboardPenggajian_pegawaiIdRouteImport } from './routes/_dashboard/penggajian_pegawai_.$id'
+import { Route as DashboardPenggajian_detailIdRouteImport } from './routes/_dashboard/penggajian_detail_.$id'
 import { Route as DashboardPegawaiIdRouteImport } from './routes/_dashboard/pegawai_.$id'
 import { Route as DashboardKelasIdRouteImport } from './routes/_dashboard/kelas_.$id'
 
@@ -223,6 +224,12 @@ const DashboardPenggajian_pegawaiIdRoute =
     path: '/penggajian_pegawai/$id',
     getParentRoute: () => DashboardRoute,
   } as any)
+const DashboardPenggajian_detailIdRoute =
+  DashboardPenggajian_detailIdRouteImport.update({
+    id: '/penggajian_detail_/$id',
+    path: '/penggajian_detail/$id',
+    getParentRoute: () => DashboardRoute,
+  } as any)
 const DashboardPegawaiIdRoute = DashboardPegawaiIdRouteImport.update({
   id: '/pegawai_/$id',
   path: '/pegawai/$id',
@@ -266,6 +273,7 @@ export interface FileRoutesByFullPath {
   '/vendor': typeof DashboardVendorRoute
   '/kelas/$id': typeof DashboardKelasIdRoute
   '/pegawai/$id': typeof DashboardPegawaiIdRoute
+  '/penggajian_detail/$id': typeof DashboardPenggajian_detailIdRoute
   '/penggajian_pegawai/$id': typeof DashboardPenggajian_pegawaiIdRoute
   '/siswa/$id': typeof DashboardSiswaIdRoute
   '/spp/$id': typeof DashboardSppIdRoute
@@ -304,6 +312,7 @@ export interface FileRoutesByTo {
   '/vendor': typeof DashboardVendorRoute
   '/kelas/$id': typeof DashboardKelasIdRoute
   '/pegawai/$id': typeof DashboardPegawaiIdRoute
+  '/penggajian_detail/$id': typeof DashboardPenggajian_detailIdRoute
   '/penggajian_pegawai/$id': typeof DashboardPenggajian_pegawaiIdRoute
   '/siswa/$id': typeof DashboardSiswaIdRoute
   '/spp/$id': typeof DashboardSppIdRoute
@@ -344,6 +353,7 @@ export interface FileRoutesById {
   '/_dashboard/vendor': typeof DashboardVendorRoute
   '/_dashboard/kelas_/$id': typeof DashboardKelasIdRoute
   '/_dashboard/pegawai_/$id': typeof DashboardPegawaiIdRoute
+  '/_dashboard/penggajian_detail_/$id': typeof DashboardPenggajian_detailIdRoute
   '/_dashboard/penggajian_pegawai_/$id': typeof DashboardPenggajian_pegawaiIdRoute
   '/_dashboard/siswa_/$id': typeof DashboardSiswaIdRoute
   '/_dashboard/spp_/$id': typeof DashboardSppIdRoute
@@ -384,6 +394,7 @@ export interface FileRouteTypes {
     | '/vendor'
     | '/kelas/$id'
     | '/pegawai/$id'
+    | '/penggajian_detail/$id'
     | '/penggajian_pegawai/$id'
     | '/siswa/$id'
     | '/spp/$id'
@@ -422,6 +433,7 @@ export interface FileRouteTypes {
     | '/vendor'
     | '/kelas/$id'
     | '/pegawai/$id'
+    | '/penggajian_detail/$id'
     | '/penggajian_pegawai/$id'
     | '/siswa/$id'
     | '/spp/$id'
@@ -461,6 +473,7 @@ export interface FileRouteTypes {
     | '/_dashboard/vendor'
     | '/_dashboard/kelas_/$id'
     | '/_dashboard/pegawai_/$id'
+    | '/_dashboard/penggajian_detail_/$id'
     | '/_dashboard/penggajian_pegawai_/$id'
     | '/_dashboard/siswa_/$id'
     | '/_dashboard/spp_/$id'
@@ -722,6 +735,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardPenggajian_pegawaiIdRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/_dashboard/penggajian_detail_/$id': {
+      id: '/_dashboard/penggajian_detail_/$id'
+      path: '/penggajian_detail/$id'
+      fullPath: '/penggajian_detail/$id'
+      preLoaderRoute: typeof DashboardPenggajian_detailIdRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/_dashboard/pegawai_/$id': {
       id: '/_dashboard/pegawai_/$id'
       path: '/pegawai/$id'
@@ -769,6 +789,7 @@ interface DashboardRouteChildren {
   DashboardVendorRoute: typeof DashboardVendorRoute
   DashboardKelasIdRoute: typeof DashboardKelasIdRoute
   DashboardPegawaiIdRoute: typeof DashboardPegawaiIdRoute
+  DashboardPenggajian_detailIdRoute: typeof DashboardPenggajian_detailIdRoute
   DashboardPenggajian_pegawaiIdRoute: typeof DashboardPenggajian_pegawaiIdRoute
   DashboardSiswaIdRoute: typeof DashboardSiswaIdRoute
   DashboardSppIdRoute: typeof DashboardSppIdRoute
@@ -805,6 +826,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardVendorRoute: DashboardVendorRoute,
   DashboardKelasIdRoute: DashboardKelasIdRoute,
   DashboardPegawaiIdRoute: DashboardPegawaiIdRoute,
+  DashboardPenggajian_detailIdRoute: DashboardPenggajian_detailIdRoute,
   DashboardPenggajian_pegawaiIdRoute: DashboardPenggajian_pegawaiIdRoute,
   DashboardSiswaIdRoute: DashboardSiswaIdRoute,
   DashboardSppIdRoute: DashboardSppIdRoute,

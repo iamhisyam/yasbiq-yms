@@ -246,6 +246,13 @@
       "when": 1781775709487,
       "tag": "0034_coa_global",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1782517358882,
+      "tag": "0035_natural_dark_beast",
+      "breakpoints": true
     }
   ]
 }

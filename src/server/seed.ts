@@ -107,8 +107,8 @@ const VENDORS = [
 
 // ─── Payroll Calculation ──────────────────────────────────────────────────────
 
-function calcPayroll(gajiPokok: number) {
-  const bruto = gajiPokok
+function calcPayroll(thp: number) {
+  const bruto = thp
   const brutoCapped = Math.min(bruto, 12000000)
   const pph21 = Math.round(bruto * 0.025)
   const bpjsKes = Math.round(Math.min(bruto, 12000000) * 0.01)
@@ -116,18 +116,18 @@ function calcPayroll(gajiPokok: number) {
   const bpjsJp = Math.round(Math.min(bruto, 10400000) * 0.01)
   const bpjsKaryawan = bpjsKes + bpjsJht + bpjsJp
   const bpjsPerusahaan = Math.round(brutoCapped * 0.04) + Math.round(brutoCapped * 0.037) + Math.round(brutoCapped * 0.02) + Math.round(brutoCapped * 0.0024) + Math.round(brutoCapped * 0.003)
-  const totalPotongan = pph21 + bpjsKaryawan
-  return { bruto, pph21, bpjsKes, bpjsJht, bpjsJp, bpjsKaryawan, bpjsPerusahaan, totalPotongan, totalDiterima: bruto - totalPotongan }
+  const totalPotongan = 0 // THP model: no deductions, BPJS/PPh are company costs
+  return { bruto, thp, pph21, bpjsKes, bpjsJht, bpjsJp, bpjsKaryawan, bpjsPerusahaan, totalPotongan, totalDiterima: thp }
 }
 
 // ─── Penggajian Komponen Template ─────────────────────────────────────────────
 
 const KOMPONEN_GAJI = [
-  { nama: 'Gaji Pokok', tipe: 'penerimaan' as const, kode: 'gaji_pokok', objekPajak: true, hitungOtomatis: false, urutan: 1 },
-  { nama: 'PPh 21', tipe: 'potongan' as const, kode: 'pph21', objekPajak: false, hitungOtomatis: true, urutan: 2 },
-  { nama: 'BPJS Kesehatan', tipe: 'potongan' as const, kode: 'bpjs_kesehatan', objekPajak: false, hitungOtomatis: true, urutan: 3 },
-  { nama: 'BPJS JHT', tipe: 'potongan' as const, kode: 'bpjs_jht', objekPajak: false, hitungOtomatis: true, urutan: 4 },
-  { nama: 'BPJS JP', tipe: 'potongan' as const, kode: 'bpjs_jp', objekPajak: false, hitungOtomatis: true, urutan: 5 },
+  { nama: 'Gaji Pokok', tipe: 'penerimaan' as const, kode: 'gaji_pokok', objekPajak: true, hitungOtomatis: true, urutan: 1 },
+  { nama: 'PPh 21', tipe: 'biaya' as const, kode: 'pph21', objekPajak: false, hitungOtomatis: true, urutan: 2 },
+  { nama: 'BPJS Kesehatan', tipe: 'biaya' as const, kode: 'bpjs_kesehatan', objekPajak: false, hitungOtomatis: true, urutan: 3 },
+  { nama: 'BPJS JHT', tipe: 'biaya' as const, kode: 'bpjs_jht', objekPajak: false, hitungOtomatis: true, urutan: 4 },
+  { nama: 'BPJS JP', tipe: 'biaya' as const, kode: 'bpjs_jp', objekPajak: false, hitungOtomatis: true, urutan: 5 },
 ]
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -473,18 +473,18 @@ async function seedUnit(cfg: SeedUnitConfig, session: { user: { id: string } }, 
       payrollOps.push(async () => {
         const [pgj] = await db.insert(penggajian).values({
           unitId, pegawaiId: peg.id, periode: `${thn(m)}-${String(bln(m)).padStart(2, '0')}`,
-          gajiPokok: peg.gajiPokok, totalPenerimaan: c.bruto,
-          totalPotongan: c.totalPotongan, totalDiterima: c.totalDiterima,
+          gajiPokok: peg.gajiPokok, totalPenerimaan: c.thp,
+          totalPotongan: 0, totalDiterima: c.thp,
           status: m === 12 ? 'draft' : 'dibayar', tanggalBayar: tgl(m, 28),
           pph21: c.pph21, bpjsKaryawan: c.bpjsKaryawan, bpjsPerusahaan: c.bpjsPerusahaan,
         }).returning()
 
         const details = [
           { tipe: 'penerimaan' as const, kode: 'gaji_pokok', nama: 'Gaji Pokok', jumlah: peg.gajiPokok, objekPajak: true, urutan: 1 },
-          { tipe: 'potongan' as const, kode: 'pph21', nama: 'PPh 21', jumlah: c.pph21, objekPajak: false, urutan: 2 },
-          { tipe: 'potongan' as const, kode: 'bpjs_kesehatan', nama: 'BPJS Kesehatan', jumlah: c.bpjsKes, objekPajak: false, urutan: 3 },
-          { tipe: 'potongan' as const, kode: 'bpjs_jht', nama: 'BPJS JHT', jumlah: c.bpjsJht, objekPajak: false, urutan: 4 },
-          { tipe: 'potongan' as const, kode: 'bpjs_jp', nama: 'BPJS JP', jumlah: c.bpjsJp, objekPajak: false, urutan: 5 },
+          { tipe: 'biaya' as const, kode: 'pph21', nama: 'PPh 21', jumlah: c.pph21, objekPajak: false, urutan: 2 },
+          { tipe: 'biaya' as const, kode: 'bpjs_kesehatan', nama: 'BPJS Kesehatan', jumlah: c.bpjsKes, objekPajak: false, urutan: 3 },
+          { tipe: 'biaya' as const, kode: 'bpjs_jht', nama: 'BPJS JHT', jumlah: c.bpjsJht, objekPajak: false, urutan: 4 },
+          { tipe: 'biaya' as const, kode: 'bpjs_jp', nama: 'BPJS JP', jumlah: c.bpjsJp, objekPajak: false, urutan: 5 },
         ]
         for (const d of details) {
           await db.insert(penggajianDetail).values({ penggajianId: pgj.id, ...d })
@@ -501,14 +501,14 @@ async function seedUnit(cfg: SeedUnitConfig, session: { user: { id: string } }, 
       const [pgj] = await db.insert(penggajian).values({
         unitId, pegawaiId: peg.id, periode: '2026-04',
         gajiPokok: peg.gajiPokok, totalPenerimaan: thr,
-        totalPotongan: thrPph21, totalDiterima: thr - thrPph21,
+        totalPotongan: 0, totalDiterima: thr,
         status: 'dibayar', tanggalBayar: '2026-04-14',
         pph21: thrPph21, bpjsKaryawan: 0, bpjsPerusahaan: 0,
         keterangan: 'THR-2026',
       }).returning()
 
       await db.insert(penggajianDetail).values({ penggajianId: pgj.id, tipe: 'penerimaan', kode: 'gaji_pokok', nama: 'Gaji Pokok (THR)', jumlah: thr, objekPajak: true, urutan: 1 })
-      await db.insert(penggajianDetail).values({ penggajianId: pgj.id, tipe: 'potongan', kode: 'pph21', nama: 'PPh 21 (THR)', jumlah: thrPph21, objekPajak: false, urutan: 2 })
+      await db.insert(penggajianDetail).values({ penggajianId: pgj.id, tipe: 'biaya', kode: 'pph21', nama: 'PPh 21 (THR)', jumlah: thrPph21, objekPajak: false, urutan: 2 })
     })
   }
 
